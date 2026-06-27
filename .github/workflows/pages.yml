@@ -1,0 +1,64 @@
+name: Validar e publicar site
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validar projeto
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v6
+
+      - name: Validar arquivos obrigatorios
+        run: |
+          if [ ! -f "index.html" ]; then
+            echo "::error file=index.html::Arquivo index.html nao encontrado"
+            exit 1
+          fi
+
+          if [ ! -f "styles.css" ]; then
+            echo "::error file=styles.css::Arquivo styles.css nao encontrado"
+            exit 1
+          fi
+
+      - name: Validar caminho do CSS
+        run: |
+          if ! grep -q 'href="styles.css"' index.html; then
+            echo "::error file=index.html::O index.html deve apontar para styles.css"
+            exit 1
+          fi
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Enviar artefato do GitHub Pages
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: "."
+
+  deploy:
+    name: Publicar no GitHub Pages
+    runs-on: ubuntu-latest
+    needs: validate
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Publicar site
+        id: deployment
+        uses: actions/deploy-pages@v4
