@@ -43,6 +43,6 @@
 
     - name: Copiar styles.css para o servidor
       ansible.builtin.copy:
-        src: "{{ playbook_dir }}/../style.css"
+        src: "{{ playbook_dir }}/../styles.css"
         dest: "{{ deploy_path }}/styles.css"
         mode: "0644"
