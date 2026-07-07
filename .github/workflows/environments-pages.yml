@@ -18,24 +18,18 @@ concurrency:
 
 jobs:
   validate:
-    name: Validar ambientes
+    name: Validar site
     runs-on: ubuntu-latest
 
     steps:
       - name: Baixar codigo
         uses: actions/checkout@v6
 
-      - name: Validar arquivos de staging
+      - name: Validar arquivos do projeto
         run: |
-          test -f ambientes/staging/index.html
-          test -f ambientes/staging/styles.css
-          grep -q "styles.css" ambientes/staging/index.html
-
-      - name: Validar arquivos de production
-        run: |
-          test -f ambientes/production/index.html
-          test -f ambientes/production/styles.css
-          grep -q "styles.css" ambientes/production/index.html
+          test -f index.html
+          test -f styles.css
+          grep -q "styles.css" index.html
 
   deploy:
     name: Publicar GitHub Pages
@@ -46,17 +40,36 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Baixar codigo
+      - name: Baixar branch atual para staging
         uses: actions/checkout@v6
+        with:
+          path: current
+
+      - name: Baixar main para production
+        if: github.ref_name != 'main'
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          path: main-version
 
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v6
 
       - name: Preparar publicacao
         run: |
-          mkdir -p public
-          cp -R ambientes/staging public/staging
-          cp -R ambientes/production public/production
+          mkdir -p public/staging public/production
+
+          cp current/index.html public/staging/index.html
+          cp current/styles.css public/staging/styles.css
+
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            cp current/index.html public/production/index.html
+            cp current/styles.css public/production/styles.css
+          else
+            cp main-version/index.html public/production/index.html
+            cp main-version/styles.css public/production/styles.css
+          fi
+
           cat > public/index.html <<'EOF'
           <!doctype html>
           <html lang="pt-BR">

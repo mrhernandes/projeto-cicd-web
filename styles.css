@@ -28,3 +28,15 @@ a {
   border-radius: 6px;
   text-decoration: none;
 }
+.feature {
+  margin: 24px auto;
+  padding: 16px;
+  border: 1px solid #54aeff;
+  border-radius: 8px;
+  background: #ddf4ff;
+}
+
+.feature h2 {
+  margin-top: 0;
+  color: #0969da;
+}
